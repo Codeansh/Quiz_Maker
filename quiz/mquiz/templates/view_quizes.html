@@ -1,0 +1,43 @@
+<html>
+    <head>
+    </head>
+        <body style="background-color: rgb(132, 146, 146);">
+
+            {%  for i in get_flashed_messages() %}
+
+            <p style="color: rgb(8, 7, 7);">{{ i }}</p>
+
+            {%endfor%}
+            <form  action="{{ url_for('mquiz.create_new')}}">
+                <button style="color:rgb(49, 200, 15);padding:1px;margin:1px;" type="submit"><h3>Add Quiz</h3> </button>
+            </form>
+            <!-- <a href="{{url_for('mquiz.create_new')}}"> <h2>Add Quiz </h2></a>     -->
+            <div style="display:grid;grid-template-columns:repeat(8,2fr);grid-gap:1rem;">
+            {% for i in qzs %}
+            
+            <div style="flex:20%;border-radius:20px;background:linear-gradient(rgb(127, 120, 170),rgb(119, 178, 220));border: rgb(18, 17, 17) solid 5px;background-color:rgb(184, 184, 184);padding:4px;margin-left:70px;color:rgb(8, 8, 14);width:350px;">
+            <h3>Title: {{ i['_id']}}</h3>
+           <p ><b>Description: </b> &nbsp; {{ i['description'] }}</p>
+           <p> <b>Questions:</b> {{ i['questions'] }}</p>
+            <b>Maker: {{i['maker']['_id']}}</b>
+            <p> Start Time: {{i['start']}}</p>
+            <p>End Time: {{ i['end'] }}</p>
+            <p> Duration : {{ i['duration']}}</p>
+            <p> <b> Solvers:</b> {{ ' '.join(i['solvers']) }}</p>
+
+
+            <form action="{{ url_for('mquiz.update',title=i['_id']) }}">
+                <button type="submit">Edit Quiz</button>
+                </form> 
+        
+                <form  action="{{ url_for('mquiz.delete_quiz',title=i['_id']) }}">
+                    <button onclick="alert('Are you sure ?')" style="color:red;" type="submit">Delete</button>
+                </form>
+            </div>   
+            <br><br>
+
+            {% endfor %} 
+        </div>
+    </body>
+
+</html>

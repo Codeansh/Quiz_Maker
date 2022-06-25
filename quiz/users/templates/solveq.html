@@ -1,0 +1,31 @@
+<html>
+    <head><title>Solve Quiz : {{qz['_id']}}</title></head>
+
+    <body>
+        <h2> {{ qz['_id'] }}</h2>
+        <p> {{ qz['description' ]}}</p>
+
+        {% for ques in qz['questions'].keys() %}
+        <div>
+            <h4> * {{ques}}</h4>
+            {% for i in qz['questions'][ques][:-1] %}
+            <p>->{{i}}</p>
+            {% endfor %}
+
+        </div>
+
+
+        {% endfor %}
+
+
+
+    </body>
+<script>
+  const timeout = document.getElementsByClassName('quest')
+  setTimeout(hideElement, 5000) //milliseconds until timeout//
+  function hideElement() {
+    timeout.style.display = 'none';
+</script>
+
+
+</html>

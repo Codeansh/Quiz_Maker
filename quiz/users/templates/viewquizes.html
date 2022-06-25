@@ -1,0 +1,37 @@
+<html>
+    <head>
+    </head>
+        <body style="background-color: rgb(132, 146, 146);">
+
+            {%  for i in get_flashed_messages() %}
+
+            <p style="color: rgb(8, 7, 7);">{{ i }}</p>
+
+            {%endfor%}
+
+    
+            <div style="display:grid;grid-template-columns:repeat(8,2fr);grid-gap:1rem;">
+            {% for i in qzs %}
+            
+            <div style="flex:20%;border-radius:20px;background:linear-gradient(rgb(127, 120, 170),rgb(119, 178, 220));border: rgb(18, 17, 17) solid 5px;background-color:rgb(184, 184, 184);padding:4px;margin-left:70px;color:rgb(8, 8, 14);width:350px;">
+            <h3>Title: {{ i['_id']}}</h3>
+           <p ><b>Description: </b> &nbsp; {{ i['description'] }}</p>
+            <b>Maker: {{i['maker']['_id']}}</b>
+            <p> Start Time: {{i['start']}}</p>
+            <p>End Time: {{ i['end'] }}</p>
+            <p> Duration : {{ i['duration']}}</p>
+            <p> <b> Solvers:</b>{{ ' '.join(i['solvers']) }}</p>
+
+
+            <form action="{{url_for('user.solve_quiz',title=i['_id'])}}">
+                <button type="submit">Start Quiz</button>
+                </form> 
+        
+            </div>   
+            <br><br>
+
+            {% endfor %} 
+        </div>
+    </body>
+
+</html>
