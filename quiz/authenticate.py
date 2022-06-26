@@ -1,32 +1,29 @@
 from functools import wraps
-from flask import request, session
+
 import jwt
+from flask import session
+
 from quiz.users.models import User
+
 
 def token_required(f):
     @wraps(f)
-    def decorated(*args,**kwargs):
+    def decorated(*args, **kwargs):
         token = None
         # if 'Authorization' in request.headers :
-            # token = request.headers["Authorization"].split(" ")[1]
+        # token = request.headers["Authorization"].split(" ")[1]
         token = session.get('token')
-        if not token :
+        if not token:
             return 'Please Enter the token to verify your identity...'
         try:
-            username = jwt.decode(token,'This is a secret key','HS256')['user_name']
+            username = jwt.decode(token, 'This is a secret key', 'HS256')['user_name']
             current_user = User.get_user(username)
-            if not current_user :
-                return 'Please login again....'                   
+            if not current_user:
+                return 'Please login again....'
 
         except Exception as e:
-            return {'Something went wrong ':str(e)}
+            return {'Something went wrong ': str(e)}
 
-        return f(current_user,*args, **kwargs)
+        return f(current_user, *args, **kwargs)
+
     return decorated
-        
-                
-
-
-
-
-
