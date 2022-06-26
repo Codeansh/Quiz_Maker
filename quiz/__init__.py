@@ -5,10 +5,12 @@ from quiz.database import quizes
 from quiz.mquiz.models import Quizes
 from quiz.mquiz.routes import bp1
 from quiz.users.routes import bp2
-
+from quiz.auth_middleware import Middleware
 
 def create_app():
     app = Flask(__name__)
+    app.wsgi_app = Middleware(app.wsgi_app)
+
     app.config.from_object(Config)
 
     app.register_blueprint(bp1)

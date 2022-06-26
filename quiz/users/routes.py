@@ -1,9 +1,8 @@
 import json
 import jwt
 
-from flask import Blueprint, redirect, render_template, request, session, url_for, flash
+from flask import Blueprint, request, session
 
-from quiz.authenticate import token_required
 from quiz.mquiz.models import Quizes
 from quiz.users.models import User
 
@@ -58,21 +57,23 @@ def login():
 
 @bp2.route('/logout')
 def logout():
-    session.pop('token', None)
+    print(request.environ)
+    del request.environ['current_user']
+    print(request.environ)
     return 'Logout successfully'
 
 
 @bp2.route('/get_all_quizes')
-@token_required
-def get_all(current_user):
+def get_all():
+    current_user = request.environ['current_user']
     qzs = list(User.get_all_quizes(current_user['_id']))
     return {'all quizes':qzs}
 
 
 
 @bp2.route('solve_quiz/<title>', methods=['GET', 'POST'])
-@token_required
-def solve_quiz(current_user, title):
+def solve_quiz(title):
+    current_user = request.environ['current_user']
     qz = Quizes.find_quizes(title)
     if not qz:
         return {'error':'Quiz is no longer active'}
