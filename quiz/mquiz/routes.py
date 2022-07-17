@@ -18,9 +18,7 @@ def create_new(current_user):
         description = data.get('description')
         questions = data.get('questions')
         duration = data.get('duration')
-        solvers = list(data.get('solvers').split(' '))
-        print(solvers)
-        print('data', title, questions, description, duration)
+        solvers = data.get('solvers')
         qzs = Quizes(title, current_user, description, questions, datetime.utcnow().strftime("%d %b %Y %l:%M %p"),
                      (datetime.utcnow() + timedelta(hours=int(duration))).strftime("%d %b %Y %l:%M %p"), solvers,
                      duration)
@@ -37,21 +35,17 @@ def update(current_user, title):
         quiz = Quizes.find_quizes(title)
         if not quiz:
             return 'Quiz Not Found'
-        if not quiz['maker'] != current_user['_id']:
+        if not quiz['maker']['_id'] != current_user['_id']:
             return 'Action not allowed '
 
         data = json.loads(request.data)
         description = data.get('description')
-        try:
-            questions = data.get('questions')
-
-        except:
-            return 'Invalid Question'
-
+        questions = data.get('questions')
         duration = data.get('duration')
-        solvers = list(data.get('solvers').split(' '))
+        solvers = data.get('solvers')
         Quizes.update(title, description, questions, duration, solvers)
-        return Quizes.find_quizes(title)
+
+        return {'updated': Quizes.find_quizes(title)}
 
     return 'Update a quiz'
 
@@ -67,11 +61,14 @@ def view_quizes(current_user):
 @token_required
 def delete_quiz(current_user, title):
     qzs = Quizes.find_quizes(title)
+    if not qzs:
+        return {'failed': 'quiz not found'}
     if qzs['maker']['_id'] != current_user['_id']:
-        return 'Not allowed to delete'
+        return {'alert': 'Not allowed to delete'}
+
     Quizes.delete(title)
 
-    return 'Deleted successfully'
+    return {'success': 'Deleted successfully'}
 
 
 @bp1.route('/add_solvers/<title>', methods=['GET', 'POST'])
@@ -80,9 +77,12 @@ def add_solvers(current_user, title):
     if request.method == 'POST':
         quiz = Quizes.find_quizes(title)
         if not quiz:
-            return 'Quiz Not Found'
-        if not quiz['maker'] != current_user['_id']:
-            return 'Action not allowed '
+            return {'message': 'Quiz Not Found'}
+        print(quiz['maker']['_id'],current_user['_id'])
+
+        if not quiz['maker']['_id'] == current_user['_id']:
+            return {'Alert': 'Action not allowed '}
+
         solvers = json.loads(request.data).get('solvers')
         Quizes.add_solvers(title, solvers)
         qzs = Quizes.find_quizes(title)

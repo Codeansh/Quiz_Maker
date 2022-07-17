@@ -1,4 +1,8 @@
-from quiz.database import quizes
+from quiz import mongo
+# import ipdb;
+#
+# ipdb.set_trace()
+quizes = mongo.db.Quizes
 
 
 class Quizes():
@@ -42,6 +46,12 @@ class Quizes():
     @staticmethod
     def find_quizes(_id):
         return quizes.find_one({'_id': _id})
+
+    @staticmethod
+    def is_active(title):
+        qz = quizes.find_one({'_id': title})
+        
+
 
     @staticmethod
     def remove_solvers(_id, l):

@@ -21,6 +21,13 @@ def register():
         password = data.get('password')
         email = data.get('email')
 
+        u = User.get_user(username)
+        u1 = User.get_user_by_email(email)
+        if u:
+            return {'message': 'username already registered'}
+        if u1:
+            return {'message': 'Email already registered'}
+
         u = User(username, fullname, email)
         u.set_password(password)
 
@@ -28,7 +35,7 @@ def register():
     return 'Please Register'
 
 
-@bp2.route('/login', methods=['GET', 'POST'])
+@bp2.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         data = json.loads(request.data)
@@ -52,21 +59,18 @@ def login():
 
         else:
             return 'Please enter correct username and password'
-    return {'message':'Please login'}
 
 
 @bp2.route('/logout')
 def logout():
-    print(request.environ)
     del request.environ['current_user']
-    print(request.environ)
     return 'Logout successfully'
 
 
 @bp2.route('/get_all_quizes')
 def get_all():
     current_user = request.environ['current_user']
-    qzs = list(User.get_all_quizes(current_user['_id']))
+    qzs = list(User.get_all_quizes(current_user))
     return {'all quizes':qzs}
 
 
@@ -76,9 +80,8 @@ def solve_quiz(title):
     current_user = request.environ['current_user']
     qz = Quizes.find_quizes(title)
     if not qz:
-        return {'error':'Quiz is no longer active'}
-
-    if current_user['_id'] not in qz['solvers']:
+        return {'error': 'Quiz is no longer active'}
+    if current_user not in qz['solvers']:
         return {'warning': 'You are not allowed to attempt this quiz.'}
 
-    return qz
+    return qz['questions']

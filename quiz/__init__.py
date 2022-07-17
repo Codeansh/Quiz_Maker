@@ -1,18 +1,18 @@
 from flask import Flask
-
+from flask_pymongo import PyMongo
 from quiz.config import Config
-from quiz.database import quizes
-from quiz.mquiz.models import Quizes
-from quiz.mquiz.routes import bp1
-from quiz.users.routes import bp2
 from quiz.auth_middleware import Middleware
+from flasgger import Swagger
+mongo = PyMongo()
 
 def create_app():
     app = Flask(__name__)
-    app.wsgi_app = Middleware(app.wsgi_app)
-
+    # app.wsgi_app = Middleware(app.wsgi_app)
     app.config.from_object(Config)
-
+    mongo.init_app(app)
+    swagger = Swagger(app)
+    from quiz.mquiz.routes import bp1
+    from quiz.users.routes import bp2
     app.register_blueprint(bp1)
     app.register_blueprint(bp2)
 

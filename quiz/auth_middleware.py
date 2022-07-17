@@ -1,19 +1,26 @@
 from werkzeug.wrappers import Request, Response
+from pymongo import MongoClient
 import jwt
-from quiz.users.models import User
+
+client = MongoClient("localhost:27017")
+users = client.quiz_database.user
+
+
 class Middleware():
+
     def __init__(self, app):
         self.app = app
-        self.username = 'shiv'
-        self.password = 'shiv'
+
     def __call__(self, environ, start_response):
 
         request = Request(environ)
         token = None
+        if request.environ.get('REQUEST_URI') in ['/user/login', '/user/register']:
+            return self.app(environ, start_response)
 
         if 'Authorization' in request.headers:
             token = request.headers["Authorization"].split(" ")[1]
-            print(token)
+
         if not token:
             msg = 'Please Enter the token to verify your identity...'
             res = Response(msg, mimetype='text/plain', status=401)
@@ -21,19 +28,23 @@ class Middleware():
 
         try:
             username = jwt.decode(token, 'This is a secret key', 'HS256')['user_name']
-            current_user = User.get_user(username)
 
-            if not current_user:
+            if not username:
                 msg = 'Please Login again '
                 res = Response(msg, mimetype='text/plain', status=401)
                 return res(environ, start_response)
 
         except Exception as e:
-            msg = 'Something went wrong '+ str(e)
+            msg = 'Something went wrong ' + str(e)
             res = Response(msg, mimetype='text/plain', status=401)
             return res(environ, start_response)
 
-        environ['current_user'] = current_user
+        u = users.find_one({'_id': username})
+
+        if not u:
+            msg = 'Username not found  '
+            res = Response(msg, mimetype='text/plain', status=401)
+            return res(environ, start_response)
+
+        environ['current_user'] = username
         return self.app(environ, start_response)
-
-

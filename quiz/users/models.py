@@ -1,6 +1,8 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from quiz.database import user, quizes
+from quiz import mongo
+user = mongo.db.user
+quizes = mongo.db.Quizes
 
 
 class User():
@@ -20,6 +22,11 @@ class User():
     @staticmethod
     def get_user(username):
         return user.find_one({'_id': username})
+
+    @staticmethod
+    def get_user_by_email(email):
+        return user.find_one({'email': email})
+
 
     @staticmethod
     def check_password(username, password):
