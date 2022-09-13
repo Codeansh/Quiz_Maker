@@ -1,7 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from mongoengine import Document, IntField,StringField,EmailField,ReferenceField
 
-
 class User(Document):
     username = StringField(required=True)
     fullname = StringField(required=True)

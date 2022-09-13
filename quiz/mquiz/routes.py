@@ -73,6 +73,5 @@ def add_solvers(current_user, title:str):
     old_solvers.update(solvers)
     qzs = quiz.update(solvers = old_solvers)
     qzs = Quizzes.objects(title=title)
-
     return {'Solvers Added': qzs}
 
