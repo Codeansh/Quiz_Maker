@@ -1,90 +1,78 @@
 import json
-from datetime import datetime, timedelta
-
-from flask import Blueprint, redirect, render_template, request, url_for, flash
-
+from flask import Blueprint, request, jsonify
 from quiz.authenticate import token_required
-from quiz.mquiz.models import Quizes
+from quiz.mquiz.models import Quizzes
+from quiz.mquiz.schemas import Create_Quiz, Update_quiz, Res_quiz
+from quiz.mquiz.utilities import Quiz_to_dict
+bp1 = Blueprint('mquiz', __name__,
+                url_prefix='/makeq',
+                template_folder='./templates')
 
-bp1 = Blueprint('mquiz', __name__, url_prefix='/makeq', template_folder='./templates')
-
-
-@bp1.route('/create_new', methods=['GET', 'POST'])
+@bp1.route('/create_new', methods=['POST'])
 @token_required
 def create_new(current_user):
-    if request.method == 'POST':
-        data = json.loads(request.data)
-        title = data.get('title')
-        description = data.get('description')
-        questions = data.get('questions')
-        duration = data.get('duration')
-        solvers = data.get('solvers')
-        qzs = Quizes(title, current_user, description, questions, datetime.utcnow().strftime("%d %b %Y %l:%M %p"),
-                     (datetime.utcnow() + timedelta(hours=int(duration))).strftime("%d %b %Y %l:%M %p"), solvers,
-                     duration)
-        return Quizes.find_quizes(title)
-
-    return 'Create a quiz'
+    data = json.loads(request.data)
+    data = Create_Quiz(**data).dict()
+    data['maker'] = current_user.username
+    quiz = Quizzes.create_quiz(data)
+    quiz = Res_quiz(**Quiz_to_dict(quiz)).dict()
+    return jsonify(quiz)
 
 
 @bp1.route('/update_quiz/<title>', methods=['GET', 'POST'])
 @token_required
 def update(current_user, title):
-    qzs = Quizes.find_quizes(title)
-    if request.method == 'POST':
-        quiz = Quizes.find_quizes(title)
-        if not quiz:
-            return 'Quiz Not Found'
-        if not quiz['maker']['_id'] != current_user['_id']:
-            return 'Action not allowed '
+    quiz = Quizzes.objects(title=title).first()
+    if not quiz:
+        return 'Quiz Not Found'
+    if quiz.maker != current_user.username:
+        return {'alert': 'Not allowed to update'}
+    data = json.loads(request.data)
+    data = Update_quiz(**data).dict()
 
-        data = json.loads(request.data)
-        description = data.get('description')
-        questions = data.get('questions')
-        duration = data.get('duration')
-        solvers = data.get('solvers')
-        Quizes.update(title, description, questions, duration, solvers)
+    quiz = quiz.update(**data)
+    quiz = Quizzes.objects(title=title).first()
 
-        return {'updated': Quizes.find_quizes(title)}
-
-    return 'Update a quiz'
+    return jsonify(quiz)
 
 
 @bp1.route('view_quizes')
 @token_required
 def view_quizes(current_user):
-    qzs = list(Quizes.find_by_maker(current_user))
-    return {'All quizes' : qzs}
+    qzs = Quizzes.objects(maker=current_user.username)
+    return jsonify(qzs)
 
 
 @bp1.route('delete_quiz/<title>', methods=['GET'])
 @token_required
 def delete_quiz(current_user, title):
-    qzs = Quizes.find_quizes(title)
+    qzs = Quizzes.objects(title=title).first()
     if not qzs:
         return {'failed': 'quiz not found'}
-    if qzs['maker']['_id'] != current_user['_id']:
+    if qzs.maker != current_user.username:
         return {'alert': 'Not allowed to delete'}
 
-    Quizes.delete(title)
+    qzs.delete()
 
     return {'success': 'Deleted successfully'}
 
 
 @bp1.route('/add_solvers/<title>', methods=['GET', 'POST'])
 @token_required
-def add_solvers(current_user, title):
-    if request.method == 'POST':
-        quiz = Quizes.find_quizes(title)
-        if not quiz:
-            return {'message': 'Quiz Not Found'}
-        print(quiz['maker']['_id'],current_user['_id'])
+def add_solvers(current_user, title:str):
+    quiz = Quizzes.objects(title=title).first()
+    if not quiz:
+        return {'message': 'Quiz Not Found'}
 
-        if not quiz['maker']['_id'] == current_user['_id']:
-            return {'Alert': 'Action not allowed '}
+    if not quiz.maker != current_user.username:
+        return {'Alert': 'Action not allowed '}
 
-        solvers = json.loads(request.data).get('solvers')
-        Quizes.add_solvers(title, solvers)
-        qzs = Quizes.find_quizes(title)
-        return {'Solvers Added': qzs}
-    return 'Add Solvers'
+    solvers = json.loads(request.data)['solvers']
+    old_solvers = quiz.solvers
+
+    old_solvers.update(solvers)
+    qzs = quiz.update(solvers = old_solvers)
+    qzs = Quizzes.objects(title=title)
+
+    return {'Solvers Added': qzs}
+

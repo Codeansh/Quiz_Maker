@@ -1,8 +1,6 @@
 from functools import wraps
-
 import jwt
 from flask import request
-
 from quiz.users.models import User
 
 
@@ -12,12 +10,11 @@ def token_required(f):
         token = None
         if 'Authorization' in request.headers:
             token = request.headers["Authorization"].split(" ")[1]
-            print(token)
         if not token:
             return 'Please Enter the token to verify your identity...'
         try:
-            username = jwt.decode(token, 'This is a secret key', 'HS256')['user_name']
-            current_user = User.get_user(username)
+            username = jwt.decode(token, 'This is a secret key', 'HS256')['username']
+            current_user = User.objects(username=username).first()
             if not current_user:
                 return 'Please login again....'
 
